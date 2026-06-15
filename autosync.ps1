@@ -26,10 +26,14 @@ while ($true) {
     # Always attempt to pull to receive updates from other machines
     $pullOutput = git pull --rebase 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Merge conflict or pull failed!" -ForegroundColor Red
-        Write-Host $pullOutput
-        Write-Host "Please resolve the conflict manually, commit, and then restart this script." -ForegroundColor Red
-        break
+        if ($pullOutput -match "(?i)fatal: unable to access|Connection was reset|Could not resolve host|Failed to connect|Connection timed out") {
+            Write-Host "Network error during pull. Will retry next cycle..." -ForegroundColor Yellow
+        } else {
+            Write-Host "ERROR: Merge conflict or pull failed!" -ForegroundColor Red
+            Write-Host $pullOutput
+            Write-Host "Please resolve the conflict manually, commit, and then restart this script." -ForegroundColor Red
+            break
+        }
     } elseif ($pullOutput -match "Fast-forward|Updating") {
         Write-Host "Successfully pulled new changes from GitHub." -ForegroundColor Green
     }
